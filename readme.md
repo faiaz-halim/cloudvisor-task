@@ -52,3 +52,43 @@ Delete temporary container,
 make docker-delete
 ```
 
+### Deploy general terraform scripts
+
+Provision vpc, rds, ec2 and corresponding subnets and security groups using,
+
+```
+make general-backend-dev
+```
+
+Update the ```tfdeploy/general/dev/versions.tf``` with s3 bucket, dynamodb and role arn from previous step. Plan and apply resources with following after updating ```tfdeploy/general/dev/terraform.tfvars```,
+
+```
+make general-init-plan-dev
+make general-apply-dev
+```
+
+It will take some minutes to create rds and generate ami image,
+
+Decommission using,
+
+```
+make general-destroy-dev
+```
+
+#### TODO: Manual steps automation (init db and docker container from terraform steps)
+
+Ssh into the ec2 vm using ```ssh -i ~/.ssh/id_rsa.pem ubuntu@ec2_ip``` and connect to mysql from commandline. Run ```init.sql``` scripts create table command to generate db schema. Test application by running following and hit ec2 public dns from browser,
+
+```
+export HOST=db_host
+export USER=db_user
+export PASSWORD=db_user_pass
+export DATABASE=db_name
+sudo docker run -p 80:5000 -d --env HOST=$HOST --env USER=$USER --env PASSWORD=$PASSWORD --env DATABASE=$DATABASE --name nodeqr faiazhalim/node-qr-app:v0.01
+```
+
+#### TODO: Run db init from ec2 startup script taking connection details from parameter store
+
+#### TODO: Setup ec2 autoscaling group with the custom ami made from modules
+
+#### TODO: Implement similar setup for prod with hardened security and blue-green deployment
