@@ -5,6 +5,8 @@ const app = express();
 const port = 5000;
 const bp = require("body-parser");
 const qr = require("qrcode");
+const requestIp = require('request-ip');
+const db=require('./database');
 
 // Using the ejs (Embedded JavaScript templates) as our template engine
 // and call the body parser  - middleware for parsing bodies from URL
@@ -28,8 +30,13 @@ app.post("/scan", (req, res) => {
     if (url.length === 0) res.send("Empty Data!");
     qr.toDataURL(url, (err, src) => {
         if (err) res.send("Error occured");
-        var idAddress = req.connection.remoteAddress;
-        console.log(idAddress);
+        var clientIp = requestIp.getClientIp(req);;
+        console.log('IP:',clientIp,'generated QR for:', url);
+        var sql = `INSERT INTO client_info (ip, qr_code, created_at) VALUES ("${clientIp}", "${url}", NOW())`;
+        db.query(sql, function(err, result) {
+            if (err) throw err;
+            console.log('Record inserted for:',url);
+        });
         res.render("scan", { src });
     });
 });
