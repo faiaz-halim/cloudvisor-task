@@ -15,3 +15,40 @@ Terraform modules to deploy eks or fargate cluster, rds to store client info fro
 ## Project Architecture
 
 ## Setup Instructions
+
+Copy ```.env_``` to ```.env``` and update necessary variable values.
+
+### Build
+
+Build docker image and push with following command,
+
+```
+make build
+```
+
+Build docker image with no cache and push,
+
+```
+make build-no-cache
+```
+
+### Run with docker
+
+Run container temporarily with docker for local testing, (This assumes you already have accessible mysql server running somewhere and tables created. See ```src/init.sql``` for db provision instructions, replace ```db_user``` with your db user account)
+
+```
+make docker-run
+```
+
+Check logs with,
+
+```
+make docker-log
+```
+
+Delete temporary container,
+
+```
+make docker-delete
+```
+
