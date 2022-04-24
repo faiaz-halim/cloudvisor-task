@@ -1,0 +1,14 @@
+
+{
+    "name": "qr",
+    "version": "1.0.0",
+    "description": "Serverless QR generator",
+    "main": "qr.js",
+    "dependencies": {
+      "qrcode": "^1.3.2"
+    },
+    "scripts": {
+      "start": "node qr.js"
+    },
+    "devDependencies": {}
+  }
