@@ -2,7 +2,7 @@
 
 #### A stateless application with frontend, backend and relational database
 
-A demo stateless application taken from here, ```https://github.com/nimbella/demo-projects/tree/master/qrcode```. This will be connected to rdbms to store client information.
+A demo stateless application taken from here, ```https://github.com/franciskaguongo/Generate-a-QR-code-in-Node.js```. This will be connected to rdbms to store client information.
 
 #### Terraform modules for deployment
 
