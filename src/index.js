@@ -28,7 +28,8 @@ app.post("/scan", (req, res) => {
     if (url.length === 0) res.send("Empty Data!");
     qr.toDataURL(url, (err, src) => {
         if (err) res.send("Error occured");
-
+        var idAddress = req.connection.remoteAddress;
+        console.log(idAddress);
         res.render("scan", { src });
     });
 });
