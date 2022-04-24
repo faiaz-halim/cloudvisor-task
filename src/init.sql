@@ -5,4 +5,4 @@ CREATE TABLE client.client_info (
 	ip varchar(100) NOT NULL,
 	qr_code varchar(100) NOT NULL,
 	created_at DATETIME NOT NULL
-)
+);
