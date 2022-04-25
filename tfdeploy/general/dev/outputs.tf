@@ -85,3 +85,10 @@ output "ec2_complete_to_ami" {
   description = "AMI created from EC2 instance"
   value       = aws_ami_from_instance.this.id
 }
+
+# ASG
+
+output "lb_dns_name" {
+  description = "The DNS name of the load balancer."
+  value       = module.alb.lb_dns_name
+}
