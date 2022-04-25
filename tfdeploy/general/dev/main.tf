@@ -401,7 +401,7 @@ module "ec2_asg" {
   desired_capacity          = 1
   wait_for_capacity_timeout = 0
   health_check_type         = "EC2"
-  key_name                  = tostring(module.key_pair.key_pair_key_name) # Should be disabled for production
+  # key_name                  = tostring(module.key_pair.key_pair_key_name) # Should be disabled for production
   vpc_zone_identifier       = module.vpc.private_subnets
   service_linked_role_arn   = aws_iam_service_linked_role.autoscaling.arn
 
