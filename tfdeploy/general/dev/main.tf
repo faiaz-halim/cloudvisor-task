@@ -1,19 +1,4 @@
 locals {
-  cloud_config = <<-END
-    #cloud-config
-    ${jsonencode({
-      write_files = [
-        {
-          path        = "init.sh"
-          permissions = "0644"
-          owner       = "root:root"
-          encoding    = "b64"
-          content     = filebase64("${path.module}/init.sh")
-        },
-      ]
-    })}
-  END
-
   tags = {
     Terraform = "true"
     environment = "dev"
@@ -81,7 +66,7 @@ resource "aws_kms_key" "this" {
   description = "${var.prefix}-kms"
 }
 
-module "key_pair" {
+module "key_pair" {            # Aws key pair should be used, this is for convenience only
   source = "../../module/key-pair"
 
   key_name   = "ssh-access"
@@ -216,22 +201,22 @@ module "alb" {
 
 data "cloudinit_config" "ec2" {
   gzip          = false
-  base64_encode = false
+  base64_encode = true
 
   part {
-    content_type = "text/cloud-config"
-    filename     = "cloud-config.yaml"
-    content      = local.cloud_config
+    content_type = "text/x-shellscript"
+    filename     = "init.sh"
+    content      = "${file("init.sh")}"
   }
 
-  # part {
-  #   content_type = "text/x-shellscript"
-  #   filename     = "example.sh"
-  #   content  = <<-EOF
-  #     #!/bin/bash
-  #     echo "Hello World"
-  #   EOF
-  # }
+  part {
+    content_type = "text/x-shellscript"           # Should have used docker compose or something else because docker run won't be alive indefinitely, but it works
+    filename     = "run.sh"
+    content  = <<-EOF
+      #!/bin/bash
+      sudo docker run -p 80:5000 -d --env HOST="${aws_ssm_parameter.db_host.value}" --env USER="${aws_ssm_parameter.db_user.value}" --env PASSWORD="${aws_ssm_parameter.db_password.value}" --env DATABASE="${aws_ssm_parameter.db_name.value}" --name nodeqr faiazhalim/node-qr-app:v0.01
+    EOF
+  }
 }
 
 ################################################################################
@@ -301,7 +286,7 @@ module "ec2_complete" {
   vpc_security_group_ids      = [module.security_group.security_group_id]
   associate_public_ip_address = true
 
-  user_data = "${file("init.sh")}"
+  user_data = data.cloudinit_config.ec2.rendered
 
   cpu_core_count       = 1 # default 2
   cpu_threads_per_core = 2 # default 2
@@ -398,6 +383,7 @@ module "ec2_asg" {
   desired_capacity          = 1
   wait_for_capacity_timeout = 0
   health_check_type         = "EC2"
+  # key_name                  = tostring(module.key_pair.key_pair_key_name) # Should be disabled for production
   vpc_zone_identifier       = module.vpc.private_subnets
   service_linked_role_arn   = aws_iam_service_linked_role.autoscaling.arn
 
@@ -436,9 +422,10 @@ module "ec2_asg" {
   launch_template_description = "Complete launch template example"
   update_default_version      = true
 
-  image_id          = aws_ami_from_instance.this.id
-  instance_type     = "t3.micro"
-  user_data         = "${base64encode(data.cloudinit_config.ec2.rendered)}"
+  # image_id          = aws_ami_from_instance.this.id # custom AMI not working yet because of original kms issue which was used to encrypt ebs volume
+  image_id          = var.ami_id
+  instance_type     = var.size
+  user_data         = data.cloudinit_config.ec2.rendered
   ebs_optimized     = true
   enable_monitoring = true
 
@@ -460,7 +447,7 @@ module "ec2_asg" {
         volume_type           = "gp3"
       }
       }, {
-      device_name = "/dev/sdf"
+      device_name = "/dev/sda1"
       no_device   = 1
       ebs = {
         delete_on_termination = true
@@ -477,7 +464,7 @@ module "ec2_asg" {
 
   cpu_options = {
     core_count       = 1
-    threads_per_core = 1
+    threads_per_core = 2
   }
 
   credit_specification = {
@@ -509,12 +496,6 @@ module "ec2_asg" {
       description           = "eth0"
       device_index          = 0
       security_groups       = [module.asg_security_group.security_group_id]
-    },
-    {
-      delete_on_termination = true
-      description           = "eth1"
-      device_index          = 1
-      security_groups       = [module.asg_security_group.security_group_id]
     }
   ]
 
@@ -535,9 +516,9 @@ module "ec2_asg" {
     }
 
     morning = {
-      min_size         = 0
-      max_size         = 1
-      desired_capacity = 1
+      min_size         = 1
+      max_size         = 3
+      desired_capacity = 2
       recurrence       = "0 7 * * 1-5" # Mon-Fri in the morning
     }
   }
