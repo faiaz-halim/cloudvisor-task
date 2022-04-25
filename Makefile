@@ -41,6 +41,9 @@ general-init-plan-dev:
 general-apply-dev:
 	cd tfdeploy/general/dev && terraform apply --auto-approve
 
+general-refresh-dev:
+	cd tfdeploy/general/dev && terraform apply -refresh-only -auto-approve
+
 general-destroy-dev:
 	cd tfdeploy/general/dev && terraform destroy --auto-approve
 

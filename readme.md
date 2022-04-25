@@ -87,8 +87,14 @@ export DATABASE=db_name
 sudo docker run -p 80:5000 -d --env HOST=$HOST --env USER=$USER --env PASSWORD=$PASSWORD --env DATABASE=$DATABASE --name nodeqr faiazhalim/node-qr-app:v0.01
 ```
 
+Update: db initialize is still manual. Have to log into the 1st created ec2 and run this script at ```sudo /var/lib/cloud/instance/scripts/db.sh```. Test db integration with docker container ```sudo /var/lib/cloud/instance/scripts/run.sh```.
+
 #### TODO: Run db init from ec2 startup script taking connection details from parameter store
 
+Done
+
 #### TODO: Setup ec2 autoscaling group with the custom ami made from modules
+
+Done but not with custom AMI. Because custom AMI encrypted ebs volumes were giving trouble over kms keys. No time to troubleshoot it.
 
 #### TODO: Implement similar setup for prod with hardened security and blue-green deployment

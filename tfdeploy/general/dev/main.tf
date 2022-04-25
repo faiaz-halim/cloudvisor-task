@@ -210,10 +210,28 @@ data "cloudinit_config" "ec2" {
   }
 
   part {
+    content_type = "text/plain"
+    filename     = "init.sql"
+    content      = "${file("init.sql")}"
+  }
+
+  part {
+    content_type = "text/x-shellscript"           # Probably better to use db init or migration script but wanted to use parameter store values here
+    filename     = "db.sh"
+    content  = <<-EOF
+      #!/bin/bash
+      DIR="$(dirname "$${BASH_SOURCE[0]}")"
+      DIR="$(realpath "$${DIR}")"
+      sudo mysql --host="${aws_ssm_parameter.db_host.value}" --user="${aws_ssm_parameter.db_user.value}" --password="${aws_ssm_parameter.db_password.value}" "${aws_ssm_parameter.db_name.value}" < $DIR/init.sql
+    EOF
+  }
+
+  part {
     content_type = "text/x-shellscript"           # Should have used docker compose or something else because docker run won't be alive indefinitely, but it works
     filename     = "run.sh"
     content  = <<-EOF
       #!/bin/bash
+      sudo docker system prune -f
       sudo docker run -p 80:5000 -d --env HOST="${aws_ssm_parameter.db_host.value}" --env USER="${aws_ssm_parameter.db_user.value}" --env PASSWORD="${aws_ssm_parameter.db_password.value}" --env DATABASE="${aws_ssm_parameter.db_name.value}" --name nodeqr faiazhalim/node-qr-app:v0.01
     EOF
   }
@@ -383,7 +401,7 @@ module "ec2_asg" {
   desired_capacity          = 1
   wait_for_capacity_timeout = 0
   health_check_type         = "EC2"
-  # key_name                  = tostring(module.key_pair.key_pair_key_name) # Should be disabled for production
+  key_name                  = tostring(module.key_pair.key_pair_key_name) # Should be disabled for production
   vpc_zone_identifier       = module.vpc.private_subnets
   service_linked_role_arn   = aws_iam_service_linked_role.autoscaling.arn
 
