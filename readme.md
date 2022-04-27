@@ -98,3 +98,20 @@ Done
 Done but not with custom AMI. Because custom AMI encrypted ebs volumes were giving trouble over kms keys. No time to troubleshoot it.
 
 #### TODO: Implement similar setup for prod with hardened security and blue-green deployment
+
+### Deploy eks terraform scripts
+
+Provision eks cluster with managed nodegroup, (optional) provide your IAM role that will get admin access to eks cluster at ```tfdeploy/eks/dev/terraform.tfvars```
+
+```
+make eks-init-plan-dev
+make eks-apply-dev
+```
+
+It will take some minutes to create eks and generate kubeconfig at ```~/.kube/config``` (Required: aws cli needs to be installed from the machine terraform is running),
+
+Decommission using,
+
+```
+make eks-destroy-dev
+```

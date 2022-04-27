@@ -47,6 +47,18 @@ general-refresh-dev:
 general-destroy-dev:
 	cd tfdeploy/general/dev && terraform destroy --auto-approve
 
+eks-init-plan-dev:
+	cd tfdeploy/eks/dev && terraform init && terraform plan
+
+eks-apply-dev:
+	cd tfdeploy/eks/dev && terraform apply --auto-approve
+
+eks-refresh-dev:
+	cd tfdeploy/eks/dev && terraform apply -refresh-only -auto-approve
+
+eks-destroy-dev:
+	cd tfdeploy/eks/dev && terraform destroy --auto-approve
+
 general-backend-prod:
 	cd tfdeploy/general/prod/backend && terraform init && terraform plan && terraform apply --auto-approve
 
