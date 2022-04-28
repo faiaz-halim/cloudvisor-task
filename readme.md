@@ -157,3 +157,4 @@ make app-register
 I have configured the app to serve 50% from blue and 50% from green. In a sense this is canary deployment but this shows with every deployment if we update ```weight: 100``` in ```deploy/register.yaml``` for either blue or green then it will be served by corresponding application version from the cluster.
 
 The app is live at ```http://task.faiazhalim.com/```, the text and button color will change for blue and green version.
+The ec2 autoscale version is live at ```http://dev-asg-alb-1808515250.ap-northeast-1.elb.amazonaws.com/``` which don't have b-g deployment. It is running with multiple docker nodes behind loadbalancer. 
