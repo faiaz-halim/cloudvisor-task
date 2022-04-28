@@ -1,0 +1,70 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: app-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - '*'
+      port:
+        name: http
+        number: 80
+        protocol: HTTP
+    - hosts:
+        - '*'
+      port:
+        name: https
+        number: 443
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        privateKey: /etc/istio/ingressgateway-certs/tls.key
+        serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: nodeqr
+  namespace: istio-system
+spec:
+  hosts:
+    - '*'
+  gateways :
+    - app-gateway.istio-system.svc.cluster.local
+  http:
+  - route:
+    - destination:
+        host: nodeqr.blue.svc.cluster.local
+        subset: v1
+      weight: 50
+    - destination:
+        host: nodeqr.green.svc.cluster.local
+        subset: v2
+      weight: 50
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: nodeqr
+  namespace: blue
+spec:
+  host: nodeqr.blue.svc.cluster.local
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: nodeqr
+  namespace: green
+spec:
+  host: nodeqr.green.svc.cluster.local
+  subsets:
+  - name: v2
+    labels:
+      version: v2

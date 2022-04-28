@@ -70,3 +70,32 @@ general-apply-prod:
 
 general-destroy-prod:
 	cd tfdeploy/general/prod && terraform destroy --auto-approve
+
+set-config:
+	export KUBECONFIG=~/.kube/config
+
+cluster-istioctl-install:
+	curl -L https://istio.io/downloadIstio | sh -
+	mv istio-1.13.3 deploy/istio
+	sudo cp deploy/istio/bin/istioctl /usr/local/bin
+
+cluster-istio-install:
+	kubectl create namespace istio-system
+	istioctl install --set profile=demo -y
+
+cluster-istio-addons:
+	kubectl apply -f deploy/istio/samples/addons
+	kubectl rollout status deployment/kiali -n istio-system
+
+cluster-istio-delete:
+	kubectl delete -f deploy/istio/samples/addons
+	kubectl delete namespace istio-system
+
+app-blue:
+	kubectl apply -k deploy/blue
+
+app-green:
+	kubectl apply -k deploy/green
+
+app-register:
+	kubectl apply -f deploy/register.yaml

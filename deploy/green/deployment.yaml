@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nodeqr
+    version: v2
+    deploy: green
+  name: nodeqr
+  namespace: green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nodeqr
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/proxyCPU: 200m
+        sidecar.istio.io/proxyMemory: 256Mi
+        traffic.sidecar.istio.io/excludeOutboundIPRanges: 0.0.0.0/0
+      labels:
+        app: nodeqr
+        version: v2
+        deploy: green
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 3000
+      serviceAccountName: green
+      containers:
+        - envFrom:
+          - secretRef:
+              name: nodeqr
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+          image: faiazhalim/node-qr-app:v0.02
+          imagePullPolicy: Always
+          livenessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            tcpSocket:
+              port: 5000
+          name: nodeqr
+          ports:
+            - containerPort: 5000
+              name: http
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            tcpSocket:
+              port: 5000
+          resources:
+            limits:
+              cpu: 100m
+              memory: 200Mi
+            requests:
+              cpu: 50m
+              memory: 100Mi
+      # imagePullSecrets:
+      #   - name: if-needed-provide
+      nodeSelector:
+        deploy: "green"

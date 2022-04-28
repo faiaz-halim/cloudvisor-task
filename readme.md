@@ -12,8 +12,6 @@ Terraform modules to create single ec2 vm with docker, deploy application, turn 
 
 Terraform modules to deploy eks or fargate cluster, rds to store client info from backend, deploy frontend to cloudfront if possible, deploy application backend, deploy istio for b/g deployment, loadbalancer to access.
 
-## Project Architecture
-
 ## Setup Instructions
 
 Copy ```.env_``` to ```.env``` and update necessary variable values.
@@ -97,8 +95,6 @@ Done
 
 Done but not with custom AMI. Because custom AMI encrypted ebs volumes were giving trouble over kms keys. No time to troubleshoot it.
 
-#### TODO: Implement similar setup for prod with hardened security and blue-green deployment
-
 ### Deploy eks terraform scripts
 
 Provision eks cluster with managed nodegroup, (optional) provide your IAM role that will get admin access to eks cluster at ```tfdeploy/eks/dev/terraform.tfvars```
@@ -115,3 +111,49 @@ Decommission using,
 ```
 make eks-destroy-dev
 ```
+
+### Blue-Green deployment using istio
+
+#### Install and configure Istio
+
+Install with,
+
+```
+cluster-istioctl-install
+cluster-istio-install
+cluster-istio-addons
+```
+
+Take a note of ```istio-ingressgateway``` elb dns address. You will need to point to this url from your domain as a CNAME address.
+
+Delete istio with,
+
+```
+cluster-istio-delete
+```
+
+#### Deploy blue and green version of app
+
+Update db access in ```secret.yaml```
+
+Deploy blue with,
+
+```
+make app-blue
+```
+
+Deploy green with,
+
+```
+make app-green
+```
+
+Register to service mesh with,
+
+```
+make app-register
+```
+
+I have configured the app to serve 50% from blue and 50% from green. In a sense this is canary deployment but this shows with every deployment if we update ```weight: 100``` in ```deploy/register.yaml``` for either blue or green then it will be served by corresponding application version from the cluster.
+
+The app is live at ```http://task.faiazhalim.com/```, the text and button color will change for blue and green version.
